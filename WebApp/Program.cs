@@ -44,6 +44,11 @@ builder.Services.AddAuthentication().AddFacebook(options =>
 {
     options.AppId = builder.Configuration["FacebookAppId"] ?? string.Empty;
     options.AppSecret = builder.Configuration["FacebookAppSecret"] ?? string.Empty;
+})
+    .AddMicrosoftAccount(options =>
+{
+    options.ClientId = builder.Configuration["MicrosoftClientId"] ?? string.Empty;
+    options.ClientSecret = builder.Configuration["MicrosoftClientSecret"] ?? string.Empty;
 });
 
 var app = builder.Build();
