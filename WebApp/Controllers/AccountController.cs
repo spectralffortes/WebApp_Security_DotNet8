@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.MicrosoftAccount;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -17,22 +19,24 @@ namespace WebApp.Controllers
             this.signInManager = signInManager;
         }
 
-        public async Task<IActionResult> ExternalLoginCallback()
+        public async Task<IActionResult> LoginExternallyCallback(string returnUrl)
         {
-            var loginInfo = await signInManager.GetExternalLoginInfoAsync();
-            if (loginInfo != null)
-            {
-                var emailClaim = loginInfo.Principal.Claims.FirstOrDefault(x => x.Type == ClaimTypes.Email);
-                var userClaim = loginInfo.Principal.Claims.FirstOrDefault(x => x.Type == ClaimTypes.Name);
+            var authenticateResult = await HttpContext.AuthenticateAsync("External");
 
-                if (emailClaim != null && userClaim != null)
-                {
-                    var user = new User { Email = emailClaim.Value, UserName = userClaim.Value };
-                    await signInManager.SignInAsync(user, false);
-                }
-            }
+            if (!authenticateResult.Succeeded)
+                return BadRequest(); // TODO: Handle this better.
 
-            return RedirectToPage("/Index");
+            var claimsIdentity = new ClaimsIdentity("Application");
+
+            claimsIdentity.AddClaim(authenticateResult.Principal.FindFirst(ClaimTypes.NameIdentifier));
+            claimsIdentity.AddClaim(authenticateResult.Principal.FindFirst(ClaimTypes.Email));
+
+            await HttpContext.SignInAsync(
+                "Application", 
+                new ClaimsPrincipal(claimsIdentity));
+
+            return LocalRedirect(returnUrl);
         }
+
     }
 }

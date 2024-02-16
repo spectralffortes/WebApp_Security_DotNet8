@@ -40,7 +40,14 @@ builder.Services.ConfigureApplicationCookie(options =>
 builder.Services.Configure<SmtpSetting>(builder.Configuration.GetSection("SMTP"));
 builder.Services.AddSingleton<IEmailService, EmailService>();
 
-builder.Services.AddAuthentication().AddFacebook(options =>
+builder.Services.AddAuthentication(o =>
+{
+    o.DefaultScheme = "Application";
+    o.DefaultSignInScheme = "External";
+})
+    .AddCookie("Application")
+    .AddCookie("External")
+    .AddFacebook(options =>
 {
     options.AppId = builder.Configuration["FacebookAppId"] ?? string.Empty;
     options.AppSecret = builder.Configuration["FacebookAppSecret"] ?? string.Empty;

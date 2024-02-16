@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.MicrosoftAccount;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -49,7 +50,7 @@ namespace WebApp.Pages.Account
                     return RedirectToPage("/Account/LoginTwoFactorWithAuthenticator",
                         new
                         {
-                           this.Credential.RememberMe
+                            this.Credential.RememberMe
                         });
                 }
 
@@ -66,13 +67,16 @@ namespace WebApp.Pages.Account
             }
         }
 
-        public IActionResult OnPostLoginExternally(string provider)
+        public IActionResult OnPostLoginExternally(string provider, string returnUrl = "/")
         {
-            var properties = signInManager.ConfigureExternalAuthenticationProperties(provider, null);
-            properties.RedirectUri = Url.Action("ExternalLoginCallback", "Account");
-
-            return Challenge(properties);
+            return new ChallengeResult(
+                MicrosoftAccountDefaults.AuthenticationScheme,
+                new AuthenticationProperties
+                {
+                    RedirectUri = Url.Action("LoginExternallyCallback", "Account", new { returnUrl })
+                });
         }
+
     }
 
     public class CredentialViewModel
